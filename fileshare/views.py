@@ -7,7 +7,7 @@ from django.conf import settings
 from core import utilities as core_utilities
 import logging
 
-from dropbox.exceptions import ApiError
+from dropbox.exceptions import ApiError, AuthError
 
 from core import safewalk
 from core.utilities import read_secret
@@ -18,20 +18,10 @@ logger = logging.getLogger(__name__)
 
 # Create your views here.
 
-# Used in development
-access_token  = os.environ.get(settings.ENVIRONMENT_OAUTH2_DROPBOX_ACCESS_TOKEN)
-
-secrets = dict(access_token=access_token)
-
 @login_required
 def index(request):
-    global secrets
-
-    access_token = secrets.get('access_token')
-
-    if request.GET.get('refresh'):
-      access_token = os.environ.get(settings.ENVIRONMENT_OAUTH2_DROPBOX_ACCESS_TOKEN)
-      secrets = dict(access_token=access_token)
+    # Used in development
+    access_token = os.environ.get(settings.ENVIRONMENT_OAUTH2_DROPBOX_ACCESS_TOKEN)
 
     if access_token is None:
       secrets = read_secrets(request.user)
@@ -39,21 +29,21 @@ def index(request):
 
     if access_token is None:
       logger.error("Fail to read secrets.")
-      return render(request, 'fileshare/error.html', status=500)
+      return render(request, 'fileshare/error.html', {'message' : 'Error : Fail to read secrets'}, status=500)
 
     else:
-      file_list = utilities.file_list(access_token)
-      return render(request, 'fileshare/index.html', {'file_list' : file_list})
+      try :
+        file_list = utilities.file_list(access_token)
+        return render(request, 'fileshare/index.html', {'file_list' : file_list})
+      except AuthError, e:
+        return render(request, 'fileshare/error.html', {'message' : 'Error: Invalid authentication token'}, status=500)
 
 @login_required
 def download(request, filename):
   global secrets
 
-  access_token = secrets.get('access_token')
-
-  if request.GET.get('refresh'):
-    access_token = os.environ.get(settings.ENVIRONMENT_OAUTH2_DROPBOX_ACCESS_TOKEN)
-    secrets = dict(access_token=access_token)
+  # Used in development
+  access_token = os.environ.get(settings.ENVIRONMENT_OAUTH2_DROPBOX_ACCESS_TOKEN)
 
   if access_token is None:
     secrets = read_secrets(request.user)
@@ -61,7 +51,7 @@ def download(request, filename):
 
   if access_token is None:
     logger.error("Fail to read secrets.")
-    return render(request, 'fileshare/error.html', status=500)
+    return render(request, 'fileshare/error.html', {'message' : 'Error : Fail to read secrets'}, status=500)
 
   else:
     try :
@@ -73,6 +63,8 @@ def download(request, filename):
       )
       response['Content-Disposition'] = 'attachment; filename=%s' % smart_str(filename)
       return response
+    except AuthError, e:
+      return render(request, 'fileshare/error.html', {'message': 'Error: Invalid authentication token'}, status=500)
     except ApiError:
       raise Http404()
 
@@ -80,11 +72,8 @@ def download(request, filename):
 def upload(request):
   global secrets
 
-  access_token = secrets.get('access_token')
-
-  if request.GET.get('refresh'):
-    access_token = os.environ.get(settings.ENVIRONMENT_OAUTH2_DROPBOX_ACCESS_TOKEN)
-    secrets = dict(access_token=access_token)
+  # Used in development
+  access_token = os.environ.get(settings.ENVIRONMENT_OAUTH2_DROPBOX_ACCESS_TOKEN)
 
   if access_token is None:
     secrets = read_secrets(request.user)
@@ -92,11 +81,14 @@ def upload(request):
 
   if access_token is None:
     logger.error("Fail to read secrets.")
-    return render(request, 'fileshare/error.html', status=500)
+    return render(request, 'fileshare/error.html', {'message' : 'Error : Fail to read secrets'}, status=500)
 
   else:
-    r = utilities.upload_file(access_token, request.FILES['upload'].name, request.FILES['upload'])
-    return redirect('/')
+    try:
+      r = utilities.upload_file(access_token, request.FILES['upload'].name, request.FILES['upload'])
+      return redirect('/')
+    except AuthError, e:
+      return render(request, 'fileshare/error.html', {'message': 'Error: Invalid authentication token'}, status=500)
 
 def read_secrets(user):
 
