@@ -4,7 +4,7 @@ import os
 from django.shortcuts import render
 
 from core.safewalk import SafewalkClient, AuthenticationException
-from django.http import HttpResponseRedirect, HttpResponseServerError, HttpResponseNotAllowed
+from django.http import HttpResponseRedirect, HttpResponseNotAllowed, JsonResponse
 from django.contrib import auth
 
 from core.utilities import read_secret
@@ -40,7 +40,9 @@ def login(request):
   else:
     return HttpResponseNotAllowed(['GET', 'POST'])
 
+def session_ckeck(request):
 
+  return JsonResponse({'is_expired': not request.user.is_authenticated()})
 
 
 

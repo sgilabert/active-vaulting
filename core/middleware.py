@@ -1,6 +1,35 @@
 from django.contrib.auth.middleware import RemoteUserMiddleware
 from django.core.exceptions import ImproperlyConfigured
+
+import os
+from django.conf import settings
+from datetime import timedelta, datetime
 from django.contrib import auth
+import dateutil.parser
+
+def json_serial(obj):
+  return obj.isoformat()
+
+class SessionExpiredMiddleware:
+
+    def process_request(self, request):
+
+        if not request.user.is_authenticated():
+          return
+
+        now = datetime.utcnow()
+        try:
+          last_activity = dateutil.parser.parse(request.session['last_activity'])
+
+          if (now - last_activity) > timedelta(0, os.environ.get(settings.ENVIRONMENT_SESSION_TIMEOUT, 15) * 60, 0):
+              auth.logout(request)
+              del request.session['last_activity']
+              return
+        except KeyError:
+          pass
+
+        if not request.is_ajax():
+            request.session['last_activity'] = now.isoformat()
 
 class PersistentRemoteUserMiddleware(RemoteUserMiddleware):
   """

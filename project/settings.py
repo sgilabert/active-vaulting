@@ -58,6 +58,7 @@ MIDDLEWARE_CLASSES = (
     'core.middleware.PersistentRemoteUserMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'core.middleware.SessionExpiredMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -135,6 +136,8 @@ ENVIRONMENT_OAUTH2_DROPBOX_ACCESS_TOKEN = "DROPBOX_OAUTH2_ACCESS_TOKEN"
 ENVIRONMENT_SAFEWALK_URL                = "SAFEWALK_URL"
 ENVIRONMENT_SAFEWALK_ACCESS_TOKEN       = "SAFEWALK_ACCESS_TOKEN"
 
+ENVIRONMENT_SESSION_TIMEOUT = "SESSION_TIMEOUT"
+
 # SECRETS
 IMAPCLIENT_ACCOUNT_NAME     = 'account-name'
 IMAPCLIENT_ACCOUNT_PASSWORD = 'account-password'
@@ -169,3 +172,4 @@ if DEBUG:
 AUTH_USER_MODEL='core.User'
 
 LOGIN_URL='/login'
+SESSION_EXPIRE_AT_BROWSER_CLOSE=True
