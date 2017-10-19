@@ -1,11 +1,12 @@
 import os
 
 from django.shortcuts import render
+
+from core.utilities import read_secret
 from . import utilities as imapclient_utilities
 from core import utilities as core_utilities
-from . import safewalk
+from core import safewalk
 from django.conf import settings
-from time import sleep
 import logging
 
 logger = logging.getLogger(__name__)
@@ -51,19 +52,6 @@ def read_secrets():
         password=decrypted_password
     )
 
-def read_secret(secret_name):    
-    attempts = os.getenv('SECRET_READ_ATTEMPTS', 13)
-    fullpath = os.path.join(settings.IMAPCLIENT_MOUNT_LOCATION, secret_name)
-    while attempts > 0:
-        try :
-            with open(fullpath, 'r') as f:
-                return f.readline().replace('\n','')
-        except IOError as e:
-            #logger.exception('Fail to read %s' % secret_name)
-            logger.error("Waiting for secrets to be written to propagate on destination account (retrying in 5 seconds)")
-            attempts = attempts - 1
-            sleep(5)
-    return None
 
 # Used in development
 account  = os.environ.get(settings.ENVIRONMENT_IMAPCLIENT_ACCOUNT_NAME)
@@ -77,17 +65,22 @@ def index(request):
     account  = secrets.get('account')
     password = secrets.get('password')
 
-    if account is None or password is None or request.GET.get('refresh'):
+    if request.GET.get('refresh'):
+      account = os.environ.get(settings.ENVIRONMENT_IMAPCLIENT_ACCOUNT_NAME)
+      password = os.environ.get(settings.ENVIRONMENT_IMAPCLIENT_ACCOUNT_PASSWORD)
+      secrets = dict(account=account, password=password)
+
+    if account is None or password is None:
         secrets = read_secrets()
         account = secrets.get('account')
         password = secrets.get('password')
 
     if account is None or password is None:
         logger.error("Fail to read secrets.")
-        return render(request, 'fileshare/error.html', status=500)
+        return render(request, 'imapclient/error.html', status=500)
 
     else:
-        return render(request, 'fileshare/index.html', {
+        return render(request, 'imapclient/index.html', {
             'account': account,
             'mails' : imapclient_utilities.read_mailbox(account, password)
         })

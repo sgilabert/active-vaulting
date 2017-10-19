@@ -45,7 +45,9 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'debug_toolbar',
     'welcome',
+    'imapclient',
     'fileshare',
+    'core',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -53,12 +55,17 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'core.middleware.PersistentRemoteUserMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
 )
+
+AUTHENTICATION_BACKENDS = [
+    'core.backends.RemoteUserBackend',
+]
 
 ROOT_URLCONF = 'project.urls'
 
@@ -113,25 +120,32 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Dev
-# ===
-# Imapclient parameters
-ENVIRONMENT_IMAPCLIENT_ACCOUNT_NAME     = 'account_name'
-ENVIRONMENT_IMAPCLIENT_ACCOUNT_PASSWORD = 'account_password'
+# Openshift environment parameters
+SECRET_READ_ATTEMPTS  = 'SECRET_READ_ATTEMPTS'
+SECRET_MOUNT_LOCATION = '/tmp'
 
-# File share parameters
-ENVIRONMENT_OAUTH2_DROPBOX_ACCESS_TOKEN     = "dropbox_oauth2_access_token"
+# Imapclient application parameters
+ENVIRONMENT_IMAPCLIENT_ACCOUNT_NAME     = 'ACCOUNT_NAME'
+ENVIRONMENT_IMAPCLIENT_ACCOUNT_PASSWORD = 'ACCOUNT_PASSWORD'
+
+# File share application parameters
+ENVIRONMENT_OAUTH2_DROPBOX_ACCESS_TOKEN = "DROPBOX_OAUTH2_ACCESS_TOKEN"
+
+# Safewalk parameters
+ENVIRONMENT_SAFEWALK_URL                = "SAFEWALK_URL"
+ENVIRONMENT_SAFEWALK_ACCESS_TOKEN       = "SAFEWALK_ACCESS_TOKEN"
 
 # SECRETS
-IMAPCLIENT_MOUNT_LOCATION   = '/tmp'
 IMAPCLIENT_ACCOUNT_NAME     = 'account-name'
 IMAPCLIENT_ACCOUNT_PASSWORD = 'account-password'
+OAUTH2_DROPBOX_ACCESS_TOKEN = "dropbox-oauth2-access-token"
 
 # SAFEWALK CONFIGURATION
 SAFEWALK_URL          = 'safewalk-url'
 SAFEWALK_ACCESS_TOKEN = 'safewalk-access-token'
 
-# SAFEWALK_CONFIGURATION    = '
+VERIFY_SSL = False
+
 
 LOGGING = {
     'version': 1,
@@ -151,3 +165,7 @@ LOGGING = {
 }
 if DEBUG:
   LOGGING['handlers']['console']['level']='DEBUG'
+
+AUTH_USER_MODEL='core.User'
+
+LOGIN_URL='/login'
