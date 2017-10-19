@@ -20,14 +20,24 @@ logger = logging.getLogger(__name__)
 
 # Create your views here.
 
+def get_access_token(request):
+  # For development, read it from env variables
+  access_token = os.environ.get(settings.ENVIRONMENT_OAUTH2_DROPBOX_ACCESS_TOKEN)
+  # Read it from the session
+  if access_token is None:
+    access_token = request.session.get('access_token')
+  # If it is not available in the session, use Safewalk active vaulting service
+  if access_token is None:
+    secrets = read_secrets(request.user)
+    access_token = secrets.get('access_token')
+    if access_token:
+      request.session['access_token'] = access_token
+  return access_token
+
 @login_required
 def index(request):
-    # Used in development
-    access_token = os.environ.get(settings.ENVIRONMENT_OAUTH2_DROPBOX_ACCESS_TOKEN)
 
-    if access_token is None:
-      secrets = read_secrets(request.user)
-      access_token = secrets.get('access_token')
+    access_token = get_access_token(request)
 
     if access_token is None:
       logger.error("Fail to read secrets.")
@@ -42,14 +52,8 @@ def index(request):
 
 @login_required
 def download(request, filename):
-  global secrets
 
-  # Used in development
-  access_token = os.environ.get(settings.ENVIRONMENT_OAUTH2_DROPBOX_ACCESS_TOKEN)
-
-  if access_token is None:
-    secrets = read_secrets(request.user)
-    access_token = secrets.get('access_token')
+  access_token = get_access_token(request)
 
   if access_token is None:
     logger.error("Fail to read secrets.")
@@ -72,14 +76,8 @@ def download(request, filename):
 
 @login_required
 def upload(request):
-  global secrets
 
-  # Used in development
-  access_token = os.environ.get(settings.ENVIRONMENT_OAUTH2_DROPBOX_ACCESS_TOKEN)
-
-  if access_token is None:
-    secrets = read_secrets(request.user)
-    access_token = secrets.get('access_token')
+  access_token = get_access_token(request)
 
   if access_token is None:
     logger.error("Fail to read secrets.")
