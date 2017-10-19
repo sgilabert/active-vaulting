@@ -37,7 +37,7 @@ class AESCipher(object):
 
 
 def read_secret(secret_name):
-  attempts = os.getenv(settings.SECRET_READ_ATTEMPTS, 13)
+  attempts = os.getenv(settings.SECRET_READ_ATTEMPTS, 30)
   fullpath = os.path.join(settings.SECRET_MOUNT_LOCATION, secret_name)
   while attempts > 0:
     try:
