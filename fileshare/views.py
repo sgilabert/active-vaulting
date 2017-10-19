@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect
 from django.conf import settings
+from django.utils.datastructures import MultiValueDictKeyError
+
 from core import utilities as core_utilities
 import logging
 
@@ -89,6 +91,8 @@ def upload(request):
       return redirect('/')
     except AuthError, e:
       return render(request, 'fileshare/error.html', {'message': 'Error: Invalid authentication token'}, status=500)
+    except MultiValueDictKeyError:
+      return redirect('/')
 
 def read_secrets(user):
 
