@@ -30,7 +30,7 @@ class SafewalkClient(object):
     if r.status_code == 200:
       return SafewalkClient(service_url, r.json()['access-token'], username=r.json()['username'])
     else:
-      message = r.json().get('reply-message', r.content)
+      message = r.json().get('reply-message', 'Safewalk authentication service is not properly configured. Invalid safewalk oauth2 access token' if r.status_code == 401 else r.content)
       username = r.json().get('username')
       raise AuthenticationException(message, username)
 
