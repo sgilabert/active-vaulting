@@ -1,4 +1,5 @@
 import os
+import urllib
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, Http404
@@ -9,7 +10,7 @@ from django.utils.datastructures import MultiValueDictKeyError
 from core import utilities as core_utilities
 import logging
 
-from dropbox.exceptions import ApiError, AuthError
+from dropbox.exceptions import ApiError, AuthError, BadInputError
 
 from core import safewalk
 from core.utilities import read_secret
@@ -39,16 +40,25 @@ def index(request):
 
     access_token = get_access_token(request)
 
+    sort_field = request.GET.get('sort')
+    reverse = request.GET.get('reverse')
+
+    if sort_field is None or reverse is None or sort_field not in ['name', 'last_modified', 'size'] or reverse not in ['t', 'f']:
+      return redirect('{}?sort=name&reverse=f'.format(request.path))
+
+
     if access_token is None:
       logger.error("Fail to read secrets.")
       return render(request, 'fileshare/error.html', {'message' : 'Error : Fail to read secrets'}, status=500)
 
     else:
       try :
-        file_list = utilities.file_list(access_token)
+
+        file_list = utilities.file_list(access_token, sort_field, reverse)
         return render(request, 'fileshare/index.html', {'file_list' : file_list})
-      except AuthError, e:
-        return render(request, 'fileshare/error.html', {'message' : 'Error: Invalid authentication token'}, status=500)
+      except (AuthError, BadInputError):
+        return render(request, 'fileshare/error.html', {'message' : 'Invalid authentication token'}, status=500)
+
 
 @login_required
 def download(request, filename):
@@ -57,7 +67,7 @@ def download(request, filename):
 
   if access_token is None:
     logger.error("Fail to read secrets.")
-    return render(request, 'fileshare/error.html', {'message' : 'Error : Fail to read secrets'}, status=500)
+    return render(request, 'fileshare/error.html', {'message' : 'Fail to read secrets'}, status=500)
 
   else:
     try :
@@ -70,7 +80,7 @@ def download(request, filename):
       response['Content-Disposition'] = 'attachment; filename=%s' % smart_str(filename)
       return response
     except AuthError, e:
-      return render(request, 'fileshare/error.html', {'message': 'Error: Invalid authentication token'}, status=500)
+      return render(request, 'fileshare/error.html', {'message': 'Invalid authentication token'}, status=500)
     except ApiError:
       raise Http404()
 
@@ -81,16 +91,16 @@ def upload(request):
 
   if access_token is None:
     logger.error("Fail to read secrets.")
-    return render(request, 'fileshare/error.html', {'message' : 'Error : Fail to read secrets'}, status=500)
+    return render(request, 'fileshare/error.html', {'message' : 'Fail to read secrets'}, status=500)
 
   else:
     try:
       r = utilities.upload_file(access_token, request.FILES['upload'].name, request.FILES['upload'])
-      return redirect('/')
+      return redirect('/?sort={}&reverse={}'.format(request.GET.get('sort', 'name'), request.GET.get('reverse', 'f')))
     except AuthError, e:
-      return render(request, 'fileshare/error.html', {'message': 'Error: Invalid authentication token'}, status=500)
+      return render(request, 'fileshare/error.html', {'message': 'Invalid authentication token'}, status=500)
     except MultiValueDictKeyError:
-      return redirect('/')
+      return redirect('/?sort={}&reverse={}'.format(request.GET.get('sort', 'name'), request.GET.get('reverse', 'f')))
 
 def read_secrets(user):
 

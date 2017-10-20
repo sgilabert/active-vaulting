@@ -10,27 +10,43 @@
 
     <!-- Optional theme -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <link href="/static/fileshare/css/fileshare.css" type="text/css" rel="stylesheet">
 
     <script src="http://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script type="text/javascript" src="/static/core/js/main.js"></script>
+
+    <script>
+
+      $(document).ready(function(){
+
+        var sort = '{{ request.GET.sort }}';
+        var reverse = '{{ request.GET.reverse }}';
+        if ( reverse == 't' ) {
+          $('span.sort-' + sort).addClass('glyphicon glyphicon-chevron-down');
+        }else{
+          $('span.sort-' + sort).addClass('glyphicon glyphicon-chevron-up');
+        }
+      });
+
+    </script>
 </head>
 <body>
-
 <section class='container'>
+  <div id="background"></div>
   <nav class="navbar navbar-default">
     <div class="container-fluid">
       <!-- Brand and toggle get grouped for better mobile display -->
       <div class="navbar-header">
-        <a class="navbar-brand" href="#">Sharing</a>
+        <a class="navbar-brand" href="#"><!--Sharing--></a>
       </div>
 
       <!-- Collect the nav links, forms, and other content for toggling -->
       <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
         <ul class="nav navbar-nav navbar-right">
           <li class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ request.user.username }}<span class="caret"></span></a>
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-user"></span> <span style="position:relative; top:-2px;">{{ request.user.username }} </span><span class="caret"></span></a>
             <ul class="dropdown-menu">
               <li><a href="/logout">Logout</a></li>
             </ul>
@@ -39,17 +55,44 @@
       </div><!-- /.navbar-collapse -->
     </div><!-- /.container-fluid -->
   </nav>
-  <h2>FILES</h2>
-  <table class="table">
+  <table class="table table-hover">
     <thead>
       <tr>
-        <th>Filename</th>
+        {% if request.GET.sort == 'name' %}
+          {% if request.GET.reverse == 'f' %}
+            <th><a href="{{ request.GET.path }}?sort=name&reverse=t">Filename <span class="sort-name"></span></a></th>
+          {% else %}
+            <th><a href="{{ request.GET.path }}?sort=name&reverse=f">Filename <span class="sort-name"></span></a></th>
+          {% endif %}
+        {% else %}
+          <th><a href="{{ request.GET.path }}?sort=name&reverse=f">Filename <span class="sort-name"></span></a></th>
+        {% endif %}
+        {% if request.GET.sort == 'last_modified' %}
+          {% if request.GET.reverse == 'f' %}
+            <th><a href="{{ request.GET.path }}?sort=last_modified&reverse=t">Last modified <span class="sort-last_modified"></span></a></th>
+          {% else %}
+            <th><a href="{{ request.GET.path }}?sort=last_modified&reverse=f">Last modified <span class="sort-last_modified"></span></a></th>
+          {% endif %}
+        {% else %}
+          <th><a href="{{ request.GET.path }}?sort=last_modified&reverse=f">Last modified <span class="sort-last_modified"></span></a></th>
+        {% endif %}
+        {% if request.GET.sort == 'size' %}
+          {% if request.GET.reverse == 'f' %}
+            <th><a href="{{ request.GET.path }}?sort=size&reverse=t">Size <span class="sort-size"></span></a></th>
+          {% else %}
+            <th><a href="{{ request.GET.path }}?sort=size&reverse=f">Size <span class="sort-size"></span></a></th>
+          {% endif %}
+        {% else %}
+          <th><a href="{{ request.GET.path }}?sort=size&reverse=f">Size <span class="sort-size"></span></a></th>
+        {% endif %}
       </tr>
     </thead>
     <tbody>
       {% for file in file_list %}
       <tr>
           <td><a href="/fileshare/download/{{ file.name }}/">{{ file.name }}</a></td>
+          <td>{{ file.last_modified|date:'Y-m-d H:i'}}</td>
+          <td>{{ file.size }}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -70,7 +113,7 @@
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         <h4 class="modal-title">Upload file</h4>
       </div>
-      <form id="upload_form" method="post" action="/fileshare/upload/" enctype="multipart/form-data" >
+      <form id="upload_form" method="post" action="/fileshare/upload/?sort={{ request.GET.sort }}&reverse={{ request.GET.reverse }}" enctype="multipart/form-data" >
         <div class="modal-body">
             {% csrf_token %}
             <div class="form-group">

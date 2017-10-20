@@ -1,0 +1,19 @@
+body {
+  font-family: "Open Sans", sans-serif;
+  height: 100vh;
+  background: url("../images/file-sharing.jpg") 50% fixed ;
+  background-size: cover;
+}
+
+
+
+.container {
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  min-height: 100%;
+  padding: 20px;
+  background: rgba(192,192,192,0.3);
+}
+
+.center{margin:0 auto;}
