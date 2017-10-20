@@ -55,8 +55,26 @@ class SafewalkClient(object):
     method = requests.post
     return self._do_request(method, *args, **kwargs)
 
+  def _get(self, function, payload=None):
+    url = self.service_url + function
+    headers = {'AUTHORIZATION': 'Bearer {}'.format(self.access_token)}
+    args = (url,)
+    kwargs = {'params': payload, 'headers': headers}
+    method = requests.get
+    return self._do_request(method, *args, **kwargs)
+
   def get_secrets(self):
     r = self._post('/api/v1/auth/vault/')
     if r.status_code == 200:
       return r.json()
     return None
+
+  def get_session_key(self):
+    r = self._post('/api/v1/auth/session_key/')
+    if r.status_code == 200:
+      return r.json()
+    return None
+
+  def check_session_key(self, session_key):
+    r = self._get('/api/v1/auth/session_key/{}'.format(session_key))
+    return r

@@ -16,6 +16,56 @@
     <script src="http://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="/static/core/js/qrcode.min.js"></script>
+
+    <script type="text/javascript">
+      $(document).ready(function(){
+
+        var sessionKey = '{{ session_key }}';
+        if ( sessionKey ){
+          var qrcode = new QRCode(document.getElementById("qrcode"), {
+            width : 234,
+	          height : 240
+          });
+          qrcode.makeCode(sessionKey);
+        }else{
+          disableQRCode();
+        }
+
+        var querystring = window.location.href.slice(window.location.href.indexOf('?') + 1);
+
+        var width = $('#qrcode canvas').width();
+
+        var disableQRCode = function($div){
+              $div.css('opacity', 0.5);
+              $div.empty().append($('<a href=".">').append($('<img>').attr('src', '/static/core/images/invalid_qrcode.png').css('width', width)));
+        }
+
+        var interval = setInterval(function(){
+            $.ajax({
+                url : '/session_key/{{ session_key }}/',
+                type : 'GET',
+                global : false,
+                success : function (data) {
+                    var next = querystring.slice(querystring.indexOf('next') + 'next'.length + 1).split('&')[0];
+                    if ( data.code == 'ACCESS_ALLOWED' ) {
+                        window.location = next;
+                    }else if ( data.code == 'NO_RESPONSE' ){
+                        disableQRCode($('#qrcode'));
+                        clearInterval(interval);
+                    }
+                },
+                error : function(jqXHR){
+                    disableQRCode($('#qrcode'));
+                    clearInterval(interval);
+                },
+            });
+        }, 3000);
+
+
+      });
+
+    </script>
 
 </head>
 
@@ -36,6 +86,7 @@
           <input type="password" placeholder="Password" name="password" required="required" />
         {% endif %}
         <i class="fa fa-key"></i>
+        <div id="qrcode" style="margin-left:23px;margin-top:15px;margin-bottom:15px;"></div>
         <p class="text-justify" style="word-wrap:break-word">{{ message }}</p>
         <button>
           <i class="spinner"></i>
