@@ -7,7 +7,7 @@ from requests import ConnectionError
 
 from core.backends import RemoteUserBackend
 from core.safewalk import SafewalkClient, AuthenticationException
-from django.http import HttpResponseRedirect, HttpResponseNotAllowed, JsonResponse, Http404, HttpResponseServerError
+from django.http import HttpResponseRedirect, HttpResponseNotAllowed, JsonResponse, HttpResponseNotFound, HttpResponseServerError
 from django.contrib import auth
 
 from core.utilities import read_secret
@@ -72,12 +72,8 @@ def session_key_verification(request, session_key):
     user, _ = UserModel.objects.get_or_create(username=username)
     return user
 
-  def update_transaction_log(self, transaction_id, reason):
-    self.client.update_transaction_log(transaction_id, reason)
-
-  safewalk_url, authentication_access_token = _get_safewalk_configuration()
-
   try:
+    safewalk_url, authentication_access_token = _get_safewalk_configuration()
     client = SafewalkClient(safewalk_url, authentication_access_token)
     r = client.check_session_key(session_key)
     if r.status_code == 200:
@@ -87,7 +83,7 @@ def session_key_verification(request, session_key):
         user.backend = "%s.%s" % (backend.__module__, backend.__class__.__name__)
         auth.login(request, user)
       return JsonResponse(r.json())
-    return Http404()
+    return HttpResponseNotFound()
   except ConnectionError, e:
     return HttpResponseServerError(str(e))
 
