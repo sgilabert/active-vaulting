@@ -202,7 +202,7 @@ def _get_access_token(request):
           if access_token:
             _set_tmp_dropbox_access_token_retrieval(request, STATUS_09_READY, access_token)
 
-      return access_token
+    return access_token
   except:
     _set_tmp_dropbox_access_token_retrieval(request, ERR_99_UNEXPECTED, None)
 
