@@ -76,7 +76,8 @@
                 var modal = $('#myModal2');
                 if ( image ) {
                   if (!modal.is(':visible')) {
-                    $('#myModal2').modal({
+                    modal.data('bs.modal', null);
+                    modal.modal({
                         backdrop: 'static',
                         keyboard: false
                     });
