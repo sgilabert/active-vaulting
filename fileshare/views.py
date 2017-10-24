@@ -168,13 +168,17 @@ def _read_secrets(request):
         else:
           _set_tmp_dropbox_access_token_retrieval(request, ERR_99_FAIL_TO_QUERY_CLOUD_PROVIDER)
 
-      if secrets and secrets['result'] == 'FAIL_TO_WRITE_ENCRYPTED_SECRETS':
+      elif secrets and secrets['result'] == 'FAIL_TO_WRITE_ENCRYPTED_SECRETS':
         _set_tmp_dropbox_access_token_retrieval(request, STATUS_02_SW_GENERATES_RANDOM_KEY)
         _set_tmp_dropbox_access_token_retrieval(request, STATUS_03_SW_GENERATES_RANDOM_IDENTIFIER)
         _set_tmp_dropbox_access_token_retrieval(request, ERR_99_FAIL_TO_WRITE_ENCRYPTED_SECRETS)
 
-      if secrets and secrets['result'] == 'VAULT_DEVICE_NOT_FOUND':
+      elif secrets and secrets['result'] == 'VAULT_DEVICE_NOT_FOUND':
         _set_tmp_dropbox_access_token_retrieval(request, ERR_99_VAULT_DEVICE_NOT_FOUND)
+
+      else:
+        _set_tmp_dropbox_access_token_retrieval(request, ERR_99_VAULT_DEVICE_NOT_FOUND)
+
 
     return dict(
       access_token=decrypted_access_token
