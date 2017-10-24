@@ -28,6 +28,10 @@ def login(request):
 
     username = request.POST.get("username", "")
     password = request.POST.get("password", "")
+
+    if not username or not password:
+      return HttpResponseRedirect('/')
+
     try :
       client = SafewalkClient.authenticate(safewalk_url, authentication_access_token, username, password)
       user = auth.authenticate(remote_user=client.username, access_token=client.access_token)
