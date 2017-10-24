@@ -78,7 +78,7 @@ def session_key_verification(request, session_key):
     r = client.check_session_key(session_key)
     if r.status_code == 200:
       if r.json()['code'] == 'ACCESS_ALLOWED':
-        user = get_user(r.json()['username'])
+        user = auth.authenticate(remote_user=r.json()['username'], access_token=r.json()['access-token'])
         backend = RemoteUserBackend()
         user.backend = "%s.%s" % (backend.__module__, backend.__class__.__name__)
         auth.login(request, user)
