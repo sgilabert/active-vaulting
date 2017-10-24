@@ -155,3 +155,8 @@ footer a, footer a:link {
   text-decoration: none;
 }
 .center{margin:0 auto;}
+
+.modal-large {
+  width: 70%;
+  height: 70%;
+}
