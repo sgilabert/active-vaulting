@@ -215,12 +215,12 @@ def _set_tmp_dropbox_access_token_retrieval(request, status, acces_token=None, s
     seconds = seconds or os.environ.get(settings.ENVIRONMENT_IMAGE_DEMO_DELAY, 5)
     sleep(seconds)
 
-  progress_thread = status_threads.get(request.user.username)
+  progress_thread = status_threads.get(request.session.session_key)
   if progress_thread is not None:
     progress_thread.join()
-  status_threads[request.user.username] = threading.Thread(target=update_status, args=(request, status, acces_token, seconds))
-  status_threads[request.user.username].setDaemon(True)
-  status_threads[request.user.username].start()
+  status_threads[request.session.session_key] = threading.Thread(target=update_status, args=(request, status, acces_token, seconds))
+  status_threads[request.session.session_key].setDaemon(True)
+  status_threads[request.session.session_key].start()
 
 
 def _get_tmp_dropbox_access_token_retrieval(request):
