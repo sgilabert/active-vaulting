@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Sharing</title>
+  <title>Safewalk dinamic vault demo</title>
 
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -13,7 +13,7 @@
     <link href="/static/fileshare/css/fileshare.css" type="text/css" rel="stylesheet">
 
     <script src="http://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
-    <!-- Latest compiled and minified JavaScript -->
+    <!-- Latest compiled and minified JçavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script type="text/javascript" src="/static/core/js/main.js"></script>
 
@@ -28,6 +28,71 @@
         }else{
           $('span.sort-' + sort).addClass('glyphicon glyphicon-chevron-up');
         }
+
+        var get_image = function (status) {
+          var image = null;
+          switch (status) {
+              case "01_APP_QUERY_SECRETS":
+                  image = 'bSafewalkVault_Workflow-2.1.png'
+                  break;
+              case "02_SW_GENERATES_RANDOM_KEY":
+                  image = 'bSafewalkVault_Workflow-2.2.png';
+                  break;
+              case "03_SW_GENERATES_RANDOM_IDENTIFIER":
+                  image = 'bSafewalkVault_Workflow-2.3.png';
+                  break;
+              case "04_SW_WRITES_TO_CLOUD_PROVIDER":
+                  image = 'bSafewalkVault_Workflow-3.png';
+                  break;
+              case "05_SW_REPLIES_TO_APP":
+                  image = 'bSafewalkVault_Workflow-4.png';
+                  break;
+              case "06_APP_QUERY_THE_CLOUD_PROVIDER":
+                  image = 'bSafewalkVault_Workflow-5.png';
+                  break;
+              case "07_APP_DECRYPT_ENCRYPTED_SECRETS":
+                  image = 'bSafewalkVault_Workflow-6.png';
+                  break;
+              case "08_APP_USES_DECRYPTED_SECRETS":
+                  image = 'bSafewalkVault_Workflow-7.png';
+                  break;
+              default:
+                  break;
+          }
+
+          if (image) {
+            image = '/static/fileshare/images/' + image;
+          }
+
+          return image;
+
+        }
+
+        {% if file_list == None %}
+          var interval = setInterval(function(){
+            $.get('/fileshare/status/', function (data) {
+              if ( data.status != '09_READY' && !data.status.startsWith('ERR_') ) {
+                var image = get_image(data.status);
+                var modal = $('#myModal2');
+                if ( image ) {
+                  if (!modal.is(':visible')) {
+                    $('#myModal2').modal({
+                        backdrop: 'static',
+                        keyboard: false
+                    });
+                  }
+                  $('#status_image').attr('src', image);
+                }else{
+                  modal.modal('hide');
+                }
+              } else {
+                clearInterval(interval);
+                location.reload();
+              }
+            });
+          }, 1000);
+        {% endif %}
+
       });
 
     </script>
@@ -88,13 +153,15 @@
       </tr>
     </thead>
     <tbody>
-      {% for file in file_list %}
-      <tr>
-          <td><a href="/fileshare/download/{{ file.name }}/">{{ file.name }}</a></td>
-          <td>{{ file.last_modified|date:'Y-m-d H:i'}}</td>
-          <td>{{ file.size }}</td>
-      </tr>
-      {% endfor %}
+      {% if file_list %}
+        {% for file in file_list %}
+        <tr>
+            <td><a href="/fileshare/download/{{ file.name }}/">{{ file.name }}</a></td>
+            <td>{{ file.last_modified|date:'Y-m-d H:i'}}</td>
+            <td>{{ file.size }}</td>
+        </tr>
+        {% endfor %}
+      {% endif %}
     </tbody>
   </table>
   <!--
@@ -103,6 +170,7 @@
   <button type="button" class="pull-right btn btn-default" data-toggle="modal" data-target="#myModal">
     Upload file
   </button>
+
 </section>
 
 <!-- DIALOGS -->
@@ -130,5 +198,17 @@
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
+
+
+<div id="myModal2" class="modal fade" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-large">
+    <div class="modal-content">
+        <div class="modal-body">
+            <img id="status_image" src="#" class="img-responsive">
+        </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
