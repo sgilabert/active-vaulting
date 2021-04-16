@@ -2,7 +2,7 @@ Django==1.8.18
 argparse==1.2.1
 certifi==2017.4.17
 chardet==3.0.4
-django-debug-toolbar==1.5
+django-debug-toolbar==1.11.1
 dropbox==8.2.0
 gunicorn==19.4.5
 idna==2.5
