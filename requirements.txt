@@ -1,6 +1,6 @@
 Django==1.8.18
 argparse==1.2.1
-certifi==2017.4.17
+certifi==2022.12.7
 chardet==3.0.4
 django-debug-toolbar==1.5
 dropbox==8.2.0
